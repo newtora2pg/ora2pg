@@ -489,7 +489,13 @@ sub convert_plsql_code
 	}
 
 	# Replace array syntax arr(i).x into arr[i].x
-	$str =~ s/\b([a-z0-9_]+)\(([^\(\)]+)\)(\.[a-z0-9_]+)/$1\[$2\]$3/igs;
+	# $str =~ s/\b([a-z0-9_]+)\(([^\(\)]+)\)(\.[a-z0-9_]+)/$1\[$2\]$3/igs;
+	# writing if condition that xml related synatx with for [ex: xmlsequence().getclobval()] --> for handling this scenario
+	if ($str !~ /\bxml.*/i)
+	{
+		# Replace array syntax arr(i).x into arr[i].x
+		$str =~ s/\b([a-z0-9_]+)\(([^\(\)]+)\)(\.[a-z0-9_]+)/$1\[$2\]$3/igs;
+	}
 
 	# Extract all block from the code by splitting it on the semi-comma
 	# character and replace all necessary function call
@@ -985,7 +991,8 @@ sub plsql_to_plpgsql
 	#$str =~ s/\%ROWTYPE//isg;
 
 	# Normalize HAVING ... GROUP BY into GROUP BY ... HAVING clause	
-	$str =~ s/\bHAVING\b((?:(?!SELECT|INSERT|UPDATE|DELETE|WHERE|FROM).)*?)\bGROUP BY\b((?:(?!SELECT|INSERT|UPDATE|DELETE|WHERE|FROM).)*?)((?=UNION|ORDER BY|LIMIT|INTO |FOR UPDATE|PROCEDURE|\)\s+(?:AS)*[a-z0-9_]+\s+)|$)/GROUP BY$2 HAVING$1/gis;
+	# $str =~ s/\bHAVING\b((?:(?!SELECT|INSERT|UPDATE|DELETE|WHERE|FROM).)*?)\bGROUP BY\b((?:(?!SELECT|INSERT|UPDATE|DELETE|WHERE|FROM).)*?)((?=UNION|ORDER BY|LIMIT|INTO |FOR UPDATE|PROCEDURE|\)\s+(?:AS)*[a-z0-9_]+\s+)|$)/GROUP BY$2 HAVING$1/gis;
+	$str =~ s/\bHAVING\b((?:(?!SELECT|INSERT|UPDATE|DELETE|WHERE|FROM|\().)*?)\bGROUP BY\b((?:(?!SELECT|INSERT|UPDATE|DELETE|WHERE|FROM|\().)*?)((?=UNION|ORDER BY|LIMIT|INTO |FOR UPDATE|PROCEDURE|\)\s+(?:AS)*[a-z0-9_]+\s+)|$)/GROUP BY$2 HAVING$1/gis;
 
 	# Add STRICT keyword when select...into and an exception with NO_DATA_FOUND/TOO_MANY_ROW is present
 	#$str =~ s/\b(SELECT\b[^;]*?INTO)(.*?)(EXCEPTION.*?(?:NO_DATA_FOUND|TOO_MANY_ROW))/$1 STRICT $2 $3/igs;
